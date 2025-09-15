@@ -6,7 +6,7 @@ from ..helper import _to_dict
 def create_one(
     session: Session,
     model: Type[ModelType],
-    data: CreateSchemaType | dict[str, Any],
+    data: CreateSchemaType,
     commit: bool = False
 ) -> ModelType:
     obj = model(**_to_dict(data))

@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from typing import Type, List
-from ..typing import ModelType
+from ..typing import ModelType, FilterSchemaType
 from ..models.query import FindOneRequestData, FindManyRequestData
 from .read import get_one, get_many
 
@@ -28,18 +28,20 @@ def delete_objects(
 def delete_one(
     session: Session,
     model: Type[ModelType],
-    req: FindOneRequestData,
+    filters: FilterSchemaType,
+    req: FindOneRequestData = FindOneRequestData(),
     commit: bool = False
 ) -> None:
-    obj = get_one(session, model, req)
+    obj = get_one(session, model, filters, req)
     if obj:
         delete_object(session, obj, commit)
 
 def delete_many(
     session: Session,
     model: Type[ModelType],
-    req: FindManyRequestData,
+    filters: FilterSchemaType,
+    req: FindManyRequestData = FindManyRequestData(),
     commit: bool = False
 ) -> int:
-    objs = get_many(session, model, req)
+    objs = get_many(session, model, filters, req)
     return delete_objects(session, objs, commit)

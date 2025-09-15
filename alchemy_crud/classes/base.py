@@ -14,7 +14,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType, FilterSche
     def create_one(
         self,
         session: Session,
-        data: CreateSchemaType | dict[str, Any],
+        data: CreateSchemaType,
         commit: bool = False
     ) -> ModelType:
         return create_one(session, self.model, data, commit)
@@ -22,47 +22,53 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType, FilterSche
     def get_one(
         self,
         session: Session,
-        req: FindOneRequestData,
+        filters: FilterSchemaType,
+        req: FindOneRequestData = FindOneRequestData(),
     ) -> Optional[ModelType]:
-        return get_one(session, self.model, req)
+        return get_one(session, self.model, filters, req)
         
     def get_many(
         self,
         session: Session,
-        req: FindManyRequestData,
+        filters: FilterSchemaType,
+        req: FindManyRequestData = FindOneRequestData(),
     ) -> list[ModelType]:
-        return get_many(session, self.model, req)
+        return get_many(session, self.model, filters, req)
 
     def update_one(
         self,
         session: Session,
-        req: FindOneRequestData,
+        filters: FilterSchemaType,
         data: UpdateSchemaType | dict[str, Any],
+        req: FindOneRequestData = FindOneRequestData(),
         commit: bool = False
     ) -> Optional[ModelType]:
-        return update_one(session, self.model, req, data, commit)
+        return update_one(session, self.model, filters, data, req, commit)
     
     def update_many(
         self,
         session: Session,
-        req: FindManyRequestData,
-        data: UpdateSchemaType | dict[str, Any],
+        filters: FilterSchemaType,
+        data: UpdateSchemaType,
+        req: FindManyRequestData = FindManyRequestData(),
         commit: bool = False
     ) -> list[ModelType]:
-        return update_many(session, self.model, req, data, commit)
+        return update_many(session, self.model, filters, data, req, commit)
     
     def delete_one(
         self,
         session: Session,
-        req: FindOneRequestData,
+        filters: FilterSchemaType,
+        req: FindOneRequestData = FindOneRequestData(),
         commit: bool = False
     ) -> None:
-        return delete_one(session, self.model, req, commit)
+        return delete_one(session, self.model, filters, req, commit)
 
     def delete_many(
         self,
         session: Session,
-        req: FindManyRequestData,
+        filters: FilterSchemaType,
+        req: FindManyRequestData = FindManyRequestData(),
         commit: bool = False
     ) -> int:
-        return delete_many(session, self.model, req, commit)
+        return delete_many(session, self.model, filters, req, commit)

@@ -57,9 +57,6 @@ class PaginationData(IgnoreExtraBaseModel):
 
 class FindRequestData(IgnoreExtraBaseModel):
 
-    filters: dict | FilterSchemaType = Field(
-        description="filter conditions on query"
-    )
     order_by: Optional[OrderByData] = Field(
         default=None,
         description="Sorting criteria"
