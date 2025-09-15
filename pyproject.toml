@@ -1,0 +1,22 @@
+[project]
+name = "alchemy_crud"
+version = "0.1.0"
+description = "Generic SQLAlchemy CRUD library with Pydantic integration"
+readme = "README.md"
+requires-python = ">=3.12"
+authors = [{name="Abolfazlj00", email="jelodarabolfazl@gmail.com"}]
+license = {text="MIT"}
+keywords = ["sqlalchemy", "crud", "pydantic", "python"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent"
+]
+
+[project.dependencies]
+sqlalchemy = ">=2.0.43"
+pydantic = ">=2.11.9"
+
+[build-system]
+requires = ["setuptools>=65.0", "wheel"]
+build-backend = "setuptools.build_meta"

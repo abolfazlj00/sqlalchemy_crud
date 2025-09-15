@@ -1,0 +1,3 @@
+from .base import CustomException
+
+class InvalidFilterError(CustomException): ...
