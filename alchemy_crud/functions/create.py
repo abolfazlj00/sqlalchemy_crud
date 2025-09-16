@@ -1,17 +1,17 @@
 from sqlalchemy.orm import Session
-from typing import Type, Any
-from ..typing import ModelType, CreateSchemaType
-from ..helper import _to_dict
+from typing import Type
+from ..typing import ModelType, CreateSchemaType, ReadSchemaType
 
 def create_one(
     session: Session,
     model: Type[ModelType],
     data: CreateSchemaType,
+    output_schema: Type[ReadSchemaType],
     commit: bool = False
-) -> ModelType:
-    obj = model(**_to_dict(data))
+) -> ReadSchemaType:
+    obj = model(**data.model_dump())
     session.add(obj)
     if commit:
         session.commit()
         session.refresh(obj)
-    return obj
+    return output_schema.model_validate(obj)

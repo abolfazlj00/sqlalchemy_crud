@@ -1,16 +1,16 @@
 from sqlalchemy.orm import Session
 from typing import Type, Optional
-from ..typing import ModelType, UpdateSchemaType, FilterSchemaType
+from ..typing import ModelType, UpdateSchemaType, ReadSchemaType, FilterSchemaType
 from ..helper import _to_dict
 from ..models.query import FindOneRequestData, FindManyRequestData
-from .read import get_one, get_many
+from .read import get_object, get_objects
 
 def update_obj(
     session: Session,
     obj: ModelType,
     data: UpdateSchemaType,
     commit: bool = False
-):
+) -> ModelType:
     update_data = _to_dict(data, exclude_unset=True)
     for field, value in update_data.items():
         setattr(obj, field, value)
@@ -24,28 +24,36 @@ def update_one(
     model: Type[ModelType],
     filters: FilterSchemaType,
     data: UpdateSchemaType,
-    req: FindOneRequestData = FindOneRequestData(),
+    to_schema: Type[ReadSchemaType],
+    req: Optional[FindOneRequestData] = None,
     commit: bool = False
-) -> Optional[ModelType]:
-    obj = get_one(session, model, filters, req)
+) -> Optional[ReadSchemaType]:
+    obj = get_object(session, model, filters, req)
     if obj:
-        return update_obj(session, obj, data, commit)
+        return to_schema.model_validate(
+            obj=update_obj(session, obj, data, commit)
+        )
 
 def update_many(
     session: Session,
     model: Type[ModelType],
     filters: FilterSchemaType,
     data: UpdateSchemaType,
-    req: FindManyRequestData = FindManyRequestData(),
+    to_schema: Type[ReadSchemaType],
+    req: Optional[FindManyRequestData] = None,
     commit: bool = False
-) -> list[ModelType]:
-    objs = get_many(session, model, filters, req)
-    update_data = _to_dict(data, exclude_unset=True)
-    for obj in objs:
-        for field, value in update_data.items():
-            setattr(obj, field, value)
-    if commit:
-        session.commit()
+) -> list[ReadSchemaType]:
+    objs = get_objects(session, model, filters, req)
+    if objs:
+        update_data = data.model_dump()
         for obj in objs:
-            session.refresh(obj)
-    return objs
+            for field, value in update_data.items():
+                setattr(obj, field, value)
+        if commit:
+            session.commit()
+            for obj in objs:
+                session.refresh(obj)
+    return [
+        to_schema.model_validate(obj)
+        for obj in objs
+    ]

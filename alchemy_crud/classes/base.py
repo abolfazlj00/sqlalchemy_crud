@@ -1,59 +1,60 @@
 from sqlalchemy.orm import Session
 from typing import Generic, Type, Any, Optional
-from ..typing import ModelType, CreateSchemaType, UpdateSchemaType, FilterSchemaType
+from ..typing import *
 from ..models.query import FindOneRequestData, FindManyRequestData
 from ..functions.create import create_one
 from ..functions.read import get_one, get_many
 from ..functions.update import update_one, update_many
 from ..functions.delete import delete_one, delete_many
 
-class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType, FilterSchemaType]):
-    def __init__(self, model: Type[ModelType]):
-        self.model = model
+class CRUDBase(Generic[ModelType, CreateSchemaType, ReadSchemaType, UpdateSchemaType, FilterSchemaType]):
+    def __init__(self, model_cls: Type[ModelType], read_cls: Type[ReadSchemaType]):
+        self.model_cls = model_cls
+        self.read_cls = read_cls
 
     def create_one(
         self,
         session: Session,
         data: CreateSchemaType,
         commit: bool = False
-    ) -> ModelType:
-        return create_one(session, self.model, data, commit)
+    ):
+        return create_one(session, self.model_cls, data, self.read_cls, commit)
 
     def get_one(
         self,
         session: Session,
         filters: FilterSchemaType,
-        req: FindOneRequestData = FindOneRequestData(),
-    ) -> Optional[ModelType]:
-        return get_one(session, self.model, filters, req)
+        req: Optional[FindOneRequestData] = None,
+    ):
+        return get_one(session, self.model_cls, filters, self.read_cls, req)
         
     def get_many(
         self,
         session: Session,
         filters: FilterSchemaType,
-        req: FindManyRequestData = FindOneRequestData(),
-    ) -> list[ModelType]:
-        return get_many(session, self.model, filters, req)
+        req: Optional[FindManyRequestData] = None
+    ):
+        return get_many(session, self.model_cls, filters, self.read_cls, req)
 
     def update_one(
         self,
         session: Session,
         filters: FilterSchemaType,
         data: UpdateSchemaType | dict[str, Any],
-        req: FindOneRequestData = FindOneRequestData(),
+        req: Optional[FindOneRequestData] = None,
         commit: bool = False
-    ) -> Optional[ModelType]:
-        return update_one(session, self.model, filters, data, req, commit)
+    ):
+        return update_one(session, self.model_cls, filters, data, self.read_cls, req, commit)
     
     def update_many(
         self,
         session: Session,
         filters: FilterSchemaType,
         data: UpdateSchemaType,
-        req: FindManyRequestData = FindManyRequestData(),
+        req: Optional[FindManyRequestData] = None,
         commit: bool = False
-    ) -> list[ModelType]:
-        return update_many(session, self.model, filters, data, req, commit)
+    ):
+        return update_many(session, self.model_cls, filters, data, self.read_cls, req, commit)
     
     def delete_one(
         self,
@@ -62,7 +63,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType, FilterSche
         req: FindOneRequestData = FindOneRequestData(),
         commit: bool = False
     ) -> None:
-        return delete_one(session, self.model, filters, req, commit)
+        return delete_one(session, self.model_cls, filters, req, commit)
 
     def delete_many(
         self,
@@ -71,4 +72,4 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType, FilterSche
         req: FindManyRequestData = FindManyRequestData(),
         commit: bool = False
     ) -> int:
-        return delete_many(session, self.model, filters, req, commit)
+        return delete_many(session, self.model_cls, filters, req, commit)
