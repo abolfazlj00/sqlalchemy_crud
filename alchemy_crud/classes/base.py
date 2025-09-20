@@ -16,9 +16,10 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, ReadSchemaType, UpdateSchema
         self,
         session: Session,
         data: CreateSchemaType,
+        flush: bool = True,
         commit: bool = False
     ):
-        return create_one(session, self.model_cls, data, self.read_cls, commit)
+        return create_one(session, self.model_cls, data, self.read_cls, flush, commit)
 
     def get_one(
         self,
@@ -42,9 +43,10 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, ReadSchemaType, UpdateSchema
         filters: FilterSchemaType,
         data: UpdateSchemaType | dict[str, Any],
         req: Optional[FindOneRequestData] = None,
+        flush: bool = True,
         commit: bool = False
     ):
-        return update_one(session, self.model_cls, filters, data, self.read_cls, req, commit)
+        return update_one(session, self.model_cls, filters, data, self.read_cls, req, flush, commit)
     
     def update_many(
         self,
@@ -52,9 +54,10 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, ReadSchemaType, UpdateSchema
         filters: FilterSchemaType,
         data: UpdateSchemaType,
         req: Optional[FindManyRequestData] = None,
+        flush: bool = True,
         commit: bool = False
     ):
-        return update_many(session, self.model_cls, filters, data, self.read_cls, req, commit)
+        return update_many(session, self.model_cls, filters, data, self.read_cls, req, flush, commit)
     
     def delete_one(
         self,

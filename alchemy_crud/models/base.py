@@ -1,4 +1,5 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
+from typing import List
 
 class CustomBaseModel(BaseModel): ...
 
@@ -23,4 +24,8 @@ class ReadSchemaBaseModel(IgnoreExtraBaseModel):
         from_attributes=True
     )
 class UpdateSchemaBaseModel(ForbidExtraBaseModel): ...
-class FilterSchemaBaseModel(ForbidExtraBaseModel): ...
+
+class FilterSchemaBaseModel(ForbidExtraBaseModel):
+
+    and_: List["FilterSchemaBaseModel"] = Field(default_factory=list)
+    or_: List["FilterSchemaBaseModel"] = Field(default_factory=list)

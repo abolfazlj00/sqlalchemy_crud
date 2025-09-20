@@ -1,8 +1,9 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
+from sqlalchemy.inspection import inspect
 from typing import Type, Optional, NewType, Tuple
 from ..typing import ModelType, FilterSchemaType, ReadSchemaType
-from ..helper import _to_dict, _apply_order, _apply_pagination
+from ..helper import _to_dict, _apply_order, _apply_pagination, build_filter
 from ..models.query import FindOneRequestData, FindManyRequestData
 
 TotalInt = NewType("TotalInt", int)
@@ -16,8 +17,11 @@ def get_object(
 ) -> Optional[ModelType]:
     if req is None:
         req = FindOneRequestData()
-    query = session.query(model).filter_by(**_to_dict(filters, exclude_unset=True))
-    query = _apply_order(query, model, req.order_by)
+    query = session.query(model).filter(
+        build_filter(model, _to_dict(filters, exclude_unset=True))
+    )
+    if req.order_by:
+        query = _apply_order(query, model, req.order_by)
     return query.first()
 
 def get_objects(
@@ -27,12 +31,19 @@ def get_objects(
     req: Optional[FindManyRequestData] = None
 ) -> Tuple[list[ModelType], TotalInt, PagesInt]:
     if req is None:
-        req = FindOneRequestData()
-    query = session.query(model).filter_by(**_to_dict(filters, exclude_unset=True))
-    query = _apply_order(query, model, req.order_by)
+        req = FindManyRequestData()
+    query = session.query(model).filter(
+        build_filter(model, _to_dict(filters, exclude_unset=True))
+    )
+    # Count rows safely without modifying the original query
+    total_count = session.query(func.count()).select_from(inspect(model).local_table).filter(
+        build_filter(model, filters)
+    ).scalar() or 0
+    if req.order_by:
+        query = _apply_order(query, model, req.order_by)
     query = _apply_pagination(query, req.pagination)
-    total_count = query.with_entities(func.count()).scalar() or 0
     query = query.offset(req.pagination.offset).limit(req.pagination.limit)
+    print("total_count, req.pagination.limit", total_count, req.pagination.limit)
     pages = total_count // req.pagination.limit
     if total_count % req.pagination.limit:
         pages += 1

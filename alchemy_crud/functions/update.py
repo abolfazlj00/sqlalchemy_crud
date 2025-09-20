@@ -9,11 +9,14 @@ def update_obj(
     session: Session,
     obj: ModelType,
     data: UpdateSchemaType,
+    flush: bool = True,
     commit: bool = False
 ) -> ModelType:
     update_data = _to_dict(data, exclude_unset=True)
     for field, value in update_data.items():
         setattr(obj, field, value)
+    if flush:
+        session.flush([obj])
     if commit:
         session.commit()
         session.refresh(obj)
@@ -26,6 +29,7 @@ def update_one(
     data: UpdateSchemaType,
     to_schema: Type[ReadSchemaType],
     req: Optional[FindOneRequestData] = None,
+    flush: bool = True,
     commit: bool = False
 ) -> Optional[ReadSchemaType]:
     obj = get_object(session, model, filters, req)
@@ -41,14 +45,17 @@ def update_many(
     data: UpdateSchemaType,
     to_schema: Type[ReadSchemaType],
     req: Optional[FindManyRequestData] = None,
+    flush: bool = True,
     commit: bool = False
 ) -> list[ReadSchemaType]:
-    objs = get_objects(session, model, filters, req)
+    objs, _, _ = get_objects(session, model, filters, req)
     if objs:
-        update_data = data.model_dump()
+        update_data = data.model_dump(exclude_unset=True)
         for obj in objs:
             for field, value in update_data.items():
                 setattr(obj, field, value)
+        if flush:
+            session.flush(objs)
         if commit:
             session.commit()
             for obj in objs:
